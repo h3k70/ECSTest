@@ -4,6 +4,7 @@ using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using static UnityEngine.Rendering.DebugUI;
 
 public struct CharacterMoveDirection : IComponentData
@@ -44,6 +45,23 @@ public partial struct CharacterMoveSystem : ISystem
             float3 currentVelocity = velocity.ValueRO.Linear;
 
             velocity.ValueRW.Linear = new float3(moveStep.x, currentVelocity.y, moveStep.y);
+        }
+    }
+}
+
+public partial struct CharacterRotateSysyem : ISystem
+{
+    public void OnUpdate(ref SystemState state)
+    {
+        foreach (var (transform, dir) in SystemAPI.Query<RefRW<LocalTransform>, CharacterMoveDirection>())
+        {
+            float3 newDir = new float3(dir.Value.x, 0f, dir.Value.y);
+
+            if (math.lengthsq(newDir) > 0.0001f)
+            {
+                quaternion targetRotation = quaternion.LookRotation(newDir, math.up());
+                transform.ValueRW.Rotation = targetRotation;
+            }
         }
     }
 }
