@@ -53,15 +53,21 @@ public partial struct CharacterRotateSysyem : ISystem
 {
     public void OnUpdate(ref SystemState state)
     {
-        foreach (var (transform, dir) in SystemAPI.Query<RefRW<LocalTransform>, CharacterMoveDirection>())
-        {
-            float3 newDir = new float3(dir.Value.x, 0f, dir.Value.y);
+        var rotateJob = new CharacterRotateJob();
+        state.Dependency = rotateJob.ScheduleParallel(state.Dependency);
+    }
+}
 
-            if (math.lengthsq(newDir) > 0.0001f)
-            {
-                quaternion targetRotation = quaternion.LookRotation(newDir, math.up());
-                transform.ValueRW.Rotation = targetRotation;
-            }
+public partial struct CharacterRotateJob : IJobEntity
+{
+    private void Execute(ref LocalTransform transform, in CharacterMoveDirection dir)
+    {
+        float3 newDir = new float3(dir.Value.x, 0f, dir.Value.y);
+
+        if (math.lengthsq(newDir) > 0.0001f)
+        {
+            quaternion targetRotation = quaternion.LookRotation(newDir, math.up());
+            transform.Rotation = targetRotation;
         }
     }
 }
