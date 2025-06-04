@@ -4,8 +4,6 @@ using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using static UnityEngine.Rendering.DebugUI;
 
 public struct CharacterMoveDirection : IComponentData
 {
@@ -17,9 +15,26 @@ public struct CharacterMoveSpeed : IComponentData
     public float Value;
 }
 
+public struct CharacterMaxHitPoints : IComponentData
+{
+    public float Value;
+}
+
+public struct CharacterCurrentHitPoints : IComponentData
+{
+    public float Value;
+}
+
+public struct DamageThisFrame : IBufferElementData
+{
+    public float Value; 
+}
+
 public class CharacterAuthoring : MonoBehaviour
 {
     public float MoveSpeed = 5;
+    public float MaxHP = 100;
+
     private class Baker : Baker<CharacterAuthoring>
     {
         public override void Bake(CharacterAuthoring authoring)
@@ -30,6 +45,15 @@ public class CharacterAuthoring : MonoBehaviour
             {
                 Value = authoring.MoveSpeed
             });
+            AddComponent(entity, new CharacterMaxHitPoints
+            {
+                Value = authoring.MaxHP
+            });
+            AddComponent(entity, new CharacterCurrentHitPoints
+            {
+                Value = authoring.MaxHP
+            });
+            AddBuffer<DamageThisFrame>(entity);
         }
     }
 }
@@ -58,6 +82,7 @@ public partial struct CharacterRotateSysyem : ISystem
     }
 }
 
+[BurstCompile]
 public partial struct CharacterRotateJob : IJobEntity
 {
     private void Execute(ref LocalTransform transform, in CharacterMoveDirection dir)
@@ -68,6 +93,25 @@ public partial struct CharacterRotateJob : IJobEntity
         {
             quaternion targetRotation = quaternion.LookRotation(newDir, math.up());
             transform.Rotation = targetRotation;
+        }
+    }
+}
+
+public partial struct ProcessDamageThisFrameSystem : ISystem
+{
+    [BurstCompile]
+    public void OnUpdate(ref SystemState state)
+    {
+        foreach (var (hp, damageThisFrame) in SystemAPI.Query<RefRW<CharacterCurrentHitPoints>, DynamicBuffer<DamageThisFrame>>())
+        {
+            if (damageThisFrame.IsEmpty)
+                continue;
+
+            foreach (var damage in damageThisFrame)
+            {
+                hp.ValueRW.Value -= damage.Value;
+            }
+            damageThisFrame.Clear();
         }
     }
 }

@@ -315,7 +315,7 @@ MonoBehaviour:
     m_Template: {fileID: 0}
     m_CollisionResponse:
       m_Override: 0
-      m_Value: 0
+      m_Value: 1
     m_Friction:
       m_Override: 0
       m_Value:
@@ -422,6 +422,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterAuthoring
   MoveSpeed: 3
+  MaxHP: 10
 --- !u!114 &4867988321969355536
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -434,3 +435,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8ee0a5aa7ee55a45bd8c72ff10f1d8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAuthoring
+  AttackDamage: 1
+  CoolDownTime: 0.2
