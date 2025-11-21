@@ -30,6 +30,16 @@ public struct DamageThisFrame : IBufferElementData
     public float Value; 
 }
 
+public struct Stun : IComponentData
+{
+    public float Time;
+}
+
+public struct CurrentTarget : IComponentData
+{
+    public float3 Value;
+}
+
 public class CharacterAuthoring : MonoBehaviour
 {
     public float MoveSpeed = 5;
@@ -63,16 +73,34 @@ public partial struct CharacterMoveSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        foreach(var (velocity, direction, speed) in SystemAPI.Query<RefRW<PhysicsVelocity>, CharacterMoveDirection, CharacterMoveSpeed>())
+        
+        foreach(var (velocity, direction, speed) in SystemAPI.Query<RefRW<PhysicsVelocity>, CharacterMoveDirection, CharacterMoveSpeed>().WithNone<Stun>())
         {
             float2 moveStep = direction.Value * speed.Value;
             float3 currentVelocity = velocity.ValueRO.Linear;
 
             velocity.ValueRW.Linear = new float3(moveStep.x, currentVelocity.y, moveStep.y);
         }
+        /*
+        var rotateJob = new CharacterMoveJob();
+        state.Dependency = rotateJob.ScheduleParallel(state.Dependency);
+        */
     }
 }
 
+[BurstCompile]
+public partial struct CharacterMoveJob : IJobEntity
+{
+    private void Execute(ref PhysicsVelocity velocity, in CharacterMoveDirection direction, in CharacterMoveSpeed speed)
+    {
+        float2 moveStep = direction.Value * speed.Value;
+        float3 currentVelocity = velocity.Linear;
+
+        velocity.Linear = new float3(moveStep.x, currentVelocity.y, moveStep.y);
+    }
+}
+
+[BurstCompile]
 public partial struct CharacterRotateSysyem : ISystem
 {
     public void OnUpdate(ref SystemState state)
@@ -96,6 +124,7 @@ public partial struct CharacterRotateJob : IJobEntity
         }
     }
 }
+
 
 public partial struct ProcessDamageThisFrameSystem : ISystem
 {

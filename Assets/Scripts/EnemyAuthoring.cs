@@ -44,6 +44,7 @@ public class EnemyAuthoring : MonoBehaviour
     }
 }
 
+[BurstCompile]
 public partial struct EnemyMoveToPayerSystem : ISystem
 {
     public void OnCreate(ref SystemState state)

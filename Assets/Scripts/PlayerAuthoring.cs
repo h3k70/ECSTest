@@ -37,7 +37,7 @@ public partial struct CameraInitializationSysyem : ISystem
 
     public void OnUpdate(ref SystemState state)
     {
-        if(CameraTargetSingleton.Instance == null) 
+        if (CameraTargetSingleton.Instance == null) 
             return;
 
         var cameraTargetTransform = CameraTargetSingleton.Instance.transform;
@@ -54,6 +54,7 @@ public partial struct CameraInitializationSysyem : ISystem
     }
 }
 
+[BurstCompile]
 [UpdateAfter(typeof(TransformSystemGroup))]
 public partial struct MoveCameraSysyem : ISystem
 {
